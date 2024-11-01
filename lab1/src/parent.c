@@ -9,16 +9,20 @@ int main() {
     int pipe1[2];
     int pipe2[2];
     pid_t pid;
+
     if (pipe(pipe1) == -1 || pipe(pipe2) == -1) {
         perror("pipe failed");
         return 1;
     }
+
     pid = fork();
+    
     if (pid == -1) {
         perror("fork failed");
         return 1;
     }
     // pipe[0] - чтение, pipe[1] - запись
+
     if (pid == 0) {
         close(pipe1[1]);
         close(pipe2[0]);
@@ -32,28 +36,33 @@ int main() {
         execlp("./child", "child", NULL);
         perror("execlp failed");
         exit(1);
-    } 
+    }
     else {
         char msg[100];
         char read_msg[100];
+
         close(pipe1[0]);
         close(pipe2[1]);
-        printf("write a doc name\n");
+
+        printf("Write a doc name\n");
         fgets(msg, sizeof(msg), stdin);
         write(pipe1[1], msg, strlen(msg) + 1);
+
         while (1) {
-            printf("Enter a message: ");
+            printf("Enter a message (exit for exit)\n");
             fgets(msg, sizeof(msg), stdin);
             if (strncmp(msg, "exit", 4) == 0) {
                 break;
             }
             write(pipe1[1], msg, strlen(msg) + 1);
             read(pipe2[0], read_msg, sizeof(read_msg));
-            printf("Parent read: %s\n", read_msg);
+            printf("Status: %s\n", read_msg);
         }
+
         close(pipe1[1]);
         close(pipe2[0]);
         waitpid(pid, NULL, 0);
     }
+
     return 0;
 }
