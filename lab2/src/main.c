@@ -34,8 +34,8 @@ void* monte_carlo(void* arg) {
 }
 
 int main(int argc, char* argv[]) {
-    // struct timespec start, end;
-    // clock_gettime(CLOCK_MONOTONIC, &start);
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
 
     if (argc != 3) {
         printf("Using: %s <radius> <thread_count>\n", argv[0]);
@@ -71,9 +71,9 @@ int main(int argc, char* argv[]) {
     double area = 4 * radius * radius * ((double)total_in_circle / (double)TOTAL_PTS);
     printf("Circle area with radius %.2f is %.5f\n", radius, area);
 
-    // clock_gettime(CLOCK_MONOTONIC, &end);
-    // double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
-    // printf("Execution time: %.10f seconds\n", elapsed);
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    double elapsed = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
+    printf("Execution time: %.10f seconds\n", elapsed);
 
     return 0;
 }

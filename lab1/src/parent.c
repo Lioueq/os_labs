@@ -16,7 +16,7 @@ int main() {
     }
 
     pid = fork();
-    
+
     if (pid == -1) {
         perror("fork failed");
         return 1;
