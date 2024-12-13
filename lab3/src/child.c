@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
     char *response_msg = shared_memory + 128;
 
     while (strlen(read_msg) == 0) {
-        sleep(1); // Ждем, пока родительский процесс запишет имя файла
+        sleep(1);
     }
 
     FILE *fp = fopen(read_msg, "w");
