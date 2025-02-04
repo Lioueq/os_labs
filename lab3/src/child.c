@@ -9,7 +9,7 @@
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s <shared_memory_name>\n", argv[0]);
+        perror("no argv");
         return 1;
     }
 

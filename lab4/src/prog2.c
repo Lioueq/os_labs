@@ -15,21 +15,21 @@ void load_library(int mode) {
         handle = dlopen("./libprogv2.so", RTLD_LAZY);
     }
     if (!handle) {
-        fprintf(stderr, "%s\n", dlerror());
+        perror(dlerror());
         exit(EXIT_FAILURE);
     }
 
     dlerror();
     *(void **) (&GCF) = dlsym(handle, "GCF");
     if ((error = dlerror()) != NULL)  {
-        fprintf(stderr, "%s\n", error);
+        perror(error);
         exit(EXIT_FAILURE);
     }
 
     dlerror();
     *(void **) (&translation) = dlsym(handle, "translation");
     if ((error = dlerror()) != NULL)  {
-        fprintf(stderr, "%s\n", error);
+        perror(error);
         exit(EXIT_FAILURE);
     }
 }

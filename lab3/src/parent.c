@@ -25,10 +25,11 @@ int main() {
         return 1;
     }
     if (pid == 0) {
-        execlp("./child", "./child", shared_memory_name, NULL);
+        execlp("./child", "./child", shared_memory_name);
         perror("execlp");
         return 1;
-    } else {
+    } 
+    else {
         printf("Write a doc name\n");
         fgets(shared_memory, SHARED_MEMORY_SIZE, stdin);
         shared_memory[strcspn(shared_memory, "\n")] = 0;
