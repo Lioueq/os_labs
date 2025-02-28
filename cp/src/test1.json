@@ -1,0 +1,24 @@
+{
+	"jobs": [
+	  {
+		"id": "job1",
+		"dependencies": [],
+		"error": false
+	  },
+	  {
+		"id": "job2",
+		"dependencies": ["job1", "job4"],
+		"error": false
+	  },
+	  {
+		"id": "job3",
+		"dependencies": ["job1"],
+		"error": false
+	  },
+	  {
+		"id": "job4",
+		"dependencies": ["job3"],
+		"error": false
+	  }
+	]
+  }

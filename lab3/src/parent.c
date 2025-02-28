@@ -41,7 +41,7 @@ int main() {
                 strcpy(shared_memory + 128, "exit");
                 break;
             }
-            usleep(100000);
+            usleep(10000);
             printf("Status: %s\n", shared_memory + 128);
         }
 

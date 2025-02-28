@@ -41,17 +41,19 @@ int main(int argc, char *argv[]) {
 
     while (1) {
         sleep(1);
-        if (strncmp(response_msg, "exit", 4) == 0) {
+        if (strncmp(read_msg, "exit", 4) == 0) {
             break;
         }
         int len = strlen(read_msg);
         if (len > 0 && (read_msg[len - 2] == ';' || read_msg[len - 2] == '.')) {
             fputs(read_msg, fp);
             strcpy(response_msg, "Success");
-        } else {
+        } 
+        else {
             strcpy(response_msg, "Not over in ';' or '.'");
         }
     }
+
     fclose(fp);
 
     return 0;
