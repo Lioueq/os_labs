@@ -9,31 +9,37 @@
 
 int main(int argc, char *argv[])
 {
-    if (argc != 3)
+    using namespace std::chrono_literals;
+
+    if (argc < 2)
     {
-        std::cerr << "Usage: ./worker <port> <parent_port>" << std::endl;
+        std::cerr << "Usage: ./worker <port> [parent_id] [own_id]" << std::endl;
         return 1;
     }
 
-    int my_port = std::stoi(argv[1]);
-    int parent_port = std::stoi(argv[2]);
-
-    // Инициализация ZMQ
+    int own_port = std::stoi(argv[1]);
+    int own_id = (argc > 3) ? std::stoi(argv[3]) : 0;
+    
+    // ID и порты для левого и правого дочерних узлов
+    int left_id = -1, right_id = -1;
+    int left_port = -1, right_port = -1;
+    
+    // Инициализация ZMQ контекста
     zmq::context_t ctx;
+    
+    // Сокет для приема команд от родителя или клиента
+    zmq::socket_t main_socket{ctx, zmq::socket_type::rep};
+    main_socket.bind("tcp://localhost:" + std::string(argv[1]));
 
-    // Сокет REP для получения команд от главного узла и других узлов
-    zmq::socket_t socket{ctx, zmq::socket_type::rep};
-    socket.bind("tcp://localhost:" + std::string(argv[1]));
-
-    // Хранилище для известных узлов (ID -> порт)
-    std::map<int, int> known_nodes;
-
+    // Сокеты для связи с дочерними узлами
+    std::map<int, zmq::socket_t> child_sockets;
+    
     for (;;)
     {
         zmq::message_t request;
 
-        // Получаем запрос
-        zmq::recv_result_t res = socket.recv(request, zmq::recv_flags::none);
+        // Принимаем запрос
+        zmq::recv_result_t res = main_socket.recv(request, zmq::recv_flags::none);
         if (!res.has_value())
         {
             std::cerr << "Error receiving message" << std::endl;
@@ -42,91 +48,128 @@ int main(int argc, char *argv[])
 
         std::string request_str = request.to_string();
         std::string response;
+        std::istringstream iss(request_str);
+        std::string cmd;
+        iss >> cmd;
 
-        if (request_str == "ping")
+        if (cmd == "ping")
         {
-            response = "Ok";
-        }
-        else if (request_str.substr(0, 4) == "exec")
-        {
-            // Текущая обработка exec
-            std::istringstream iss(request_str.substr(5));
-            int n;
-            iss >> n;
-
-            long long sum = 0;
-            int num;
-            for (int i = 0; i < n && iss >> num; i++)
-            {
-                sum += num;
-            }
-
-            response = std::to_string(sum);
-        }
-        else if (request_str.substr(0, 9) == "node_info")
-        {
-            // Регистрация информации о другом узле
-            std::istringstream iss(request_str.substr(10));
-            int node_id, node_port;
-            if (iss >> node_id >> node_port)
-            {
-                known_nodes[node_id] = node_port;
-                response = "Node " + std::to_string(node_id) + " registered";
-            }
-            else
-            {
-                response = "Invalid node info";
-            }
-        }
-        else if (request_str.substr(0, 4) == "send")
-        {
-            // Обработка команды отправки сообщения другому узлу
-            std::istringstream iss(request_str.substr(5));
             int target_id;
-            std::string message;
+            iss >> target_id;
             
-            if (iss >> target_id && known_nodes.count(target_id) > 0)
+            // Если запрос к текущему узлу
+            if (target_id == own_id || target_id == 0)
             {
-                std::getline(iss, message);
+                response = "Ok";
+            }
+            // Иначе перенаправляем запрос к нужному дочернему узлу
+            else 
+            {
+                bool child_found = false;
                 
-                // Создаем временный REQ сокет для отправки сообщения
-                zmq::socket_t req_socket{ctx, zmq::socket_type::req};
-                req_socket.connect("tcp://localhost:" + std::to_string(known_nodes[target_id]));
+                // Определяем путь: если ID меньше текущего, идем влево, иначе вправо
+                int child_id = (target_id < own_id) ? left_id : right_id;
+                int child_port = (target_id < own_id) ? left_port : right_port;
                 
-                // Устанавливаем таймаут
-                int timeout = 1000;
-                req_socket.set(zmq::sockopt::rcvtimeo, timeout);
-                
-                // Формируем сообщение
-                std::string msg = "message" + message;
-                
-                // Отправляем и ждем ответа
-                req_socket.send(zmq::buffer(msg), zmq::send_flags::none);
-                
-                zmq::message_t reply;
-                auto reply_res = req_socket.recv(reply, zmq::recv_flags::none);
-                
-                if (reply_res.has_value())
+                if (child_id != -1 && child_port != -1)
                 {
-                    response = "Message delivered to node " + std::to_string(target_id) + 
-                              ", response: " + reply.to_string();
+                    // Создаем сокет для связи с дочерним узлом, если он еще не существует
+                    if (child_sockets.find(child_id) == child_sockets.end())
+                    {
+                        child_sockets[child_id] = zmq::socket_t(ctx, zmq::socket_type::req);
+                        child_sockets[child_id].connect("tcp://localhost:" + std::to_string(child_port));
+                        child_sockets[child_id].set(zmq::sockopt::rcvtimeo, 1000);
+                    }
+                    
+                    // Пересылаем запрос
+                    child_sockets[child_id].send(zmq::buffer(request_str), zmq::send_flags::none);
+                    
+                    // Ждем ответа
+                    zmq::message_t child_reply;
+                    auto child_res = child_sockets[child_id].recv(child_reply, zmq::recv_flags::none);
+                    
+                    if (child_res.has_value())
+                    {
+                        response = child_reply.to_string();
+                        child_found = true;
+                    }
                 }
-                else
+                
+                if (!child_found)
                 {
-                    response = "Failed to deliver message to node " + std::to_string(target_id);
+                    response = "Error: Unable to reach node";
                 }
+            }
+        }
+        else if (cmd == "exec")
+        {
+            int target_id;
+            iss >> target_id;
+            
+            // Если команда для текущего узла
+            if (target_id == own_id || target_id == 0)
+            {
+                int n;
+                iss >> n;
+
+                long long sum = 0;
+                int num;
+                for (int i = 0; i < n && iss >> num; i++)
+                {
+                    sum += num;
+                }
+                response = std::to_string(sum);
             }
             else
             {
-                response = "Unknown target node or invalid command";
+                // Перенаправляем запрос, аналогично команде ping
+                bool child_found = false;
+                int child_id = (target_id < own_id) ? left_id : right_id;
+                int child_port = (target_id < own_id) ? left_port : right_port;
+                
+                if (child_id != -1 && child_port != -1)
+                {
+                    if (child_sockets.find(child_id) == child_sockets.end())
+                    {
+                        child_sockets[child_id] = zmq::socket_t(ctx, zmq::socket_type::req);
+                        child_sockets[child_id].connect("tcp://localhost:" + std::to_string(child_port));
+                        child_sockets[child_id].set(zmq::sockopt::rcvtimeo, 2000);
+                    }
+                    
+                    child_sockets[child_id].send(zmq::buffer(request_str), zmq::send_flags::none);
+                    
+                    zmq::message_t child_reply;
+                    auto child_res = child_sockets[child_id].recv(child_reply, zmq::recv_flags::none);
+                    
+                    if (child_res.has_value())
+                    {
+                        response = child_reply.to_string();
+                        child_found = true;
+                    }
+                }
+                
+                if (!child_found)
+                {
+                    response = "Error: Unable to reach node";
+                }
             }
         }
-        else if (request_str.substr(0, 7) == "message")
+        else if (cmd == "register_child")
         {
-            // Обработка входящего сообщения от другого узла
-            std::string message_content = request_str.substr(7);
-            std::cout << "Received message: " << message_content << std::endl;
-            response = "Message received";
+            int child_id, child_port;
+            iss >> child_id >> child_port;
+            
+            if (child_id < own_id)
+            {
+                left_id = child_id;
+                left_port = child_port;
+            }
+            else
+            {
+                right_id = child_id;
+                right_port = child_port;
+            }
+            response = "ChildRegistered";
         }
         else
         {
@@ -134,7 +177,7 @@ int main(int argc, char *argv[])
         }
 
         // Отправляем ответ
-        socket.send(zmq::buffer(response), zmq::send_flags::none);
+        main_socket.send(zmq::buffer(response), zmq::send_flags::none);
     }
 
     return 0;

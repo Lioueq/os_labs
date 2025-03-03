@@ -190,3 +190,7 @@ bool BinaryTree::getNodeStatus(int id)
     }
     return false; // Узел не найден
 }
+
+Node* BinaryTree::findRoot() {
+    return root;
+}

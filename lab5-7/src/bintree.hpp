@@ -35,6 +35,7 @@ public:
     Node* getRoot() { return root; }
     void insert(int id, int port);
     Node *find(int id);
+    Node *findRoot();
     void traverseInOrder();
     void remove(int id);
     bool isEmpty();
