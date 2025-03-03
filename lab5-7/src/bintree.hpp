@@ -9,6 +9,7 @@ struct Node
     int id;
     Node *left;
     Node *right;
+    int parent_port;
     int port;
     bool is_alive;
 };
@@ -19,7 +20,7 @@ private:
     Node *root;
 
     // Вспомогательные рекурсивные методы
-    Node *insertRecursive(Node *current, int id, int port);
+    Node *insertRecursive(Node *current, int id, int port, int parent_port);
     Node *findRecursive(Node *current, int id);
     void traverseInOrderRecursive(Node *current);
     void deleteTreeRecursive(Node *current);
@@ -31,6 +32,7 @@ public:
     ~BinaryTree();
 
     // Основные методы для работы с деревом
+    Node* getRoot() { return root; }
     void insert(int id, int port);
     Node *find(int id);
     void traverseInOrder();

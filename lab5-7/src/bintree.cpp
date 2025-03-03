@@ -23,17 +23,18 @@ void BinaryTree::deleteTreeRecursive(Node *current)
 // Вставка нового узла
 void BinaryTree::insert(int id, int port)
 {
-    root = insertRecursive(root, id, port);
+    root = insertRecursive(root, id, port, 0);
 }
 
 // Рекурсивная вставка узла
-Node *BinaryTree::insertRecursive(Node *current, int id, int port)
+Node *BinaryTree::insertRecursive(Node *current, int id, int port, int parent_port)
 {
     if (current == nullptr)
     {
         Node *newNode = new Node;
         newNode->id = id;
         newNode->port = port;
+        newNode->parent_port = parent_port;
         newNode->left = nullptr;
         newNode->right = nullptr;
         newNode->is_alive = true;
@@ -42,11 +43,11 @@ Node *BinaryTree::insertRecursive(Node *current, int id, int port)
 
     if (id < current->id)
     {
-        current->left = insertRecursive(current->left, id, port);
+        current->left = insertRecursive(current->left, id, port, current->port);
     }
     else if (id > current->id)
     {
-        current->right = insertRecursive(current->right, id, port);
+        current->right = insertRecursive(current->right, id, port, current->port);
     }
     // Если id равен текущему, можно обновить информацию или оставить как есть
 
