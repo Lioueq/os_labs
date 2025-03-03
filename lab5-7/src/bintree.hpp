@@ -33,6 +33,7 @@ public:
     // Основные методы для работы с деревом
     void insert(int id, int port);
     Node *find(int id);
+    Node *findRoot();
     void traverseInOrder();
     void remove(int id);
     bool isEmpty();
