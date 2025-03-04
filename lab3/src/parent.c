@@ -19,6 +19,9 @@ int main() {
         return 1;
     }
 
+    // Очищаем область разделяемой памяти
+    memset(shared_memory, 0, SHARED_MEMORY_SIZE);
+    
     pid_t pid = fork();
     if (pid == -1) {
         perror("fork");
@@ -34,14 +37,18 @@ int main() {
         fgets(shared_memory, SHARED_MEMORY_SIZE, stdin);
         shared_memory[strcspn(shared_memory, "\n")] = 0;
 
+        // Даём время дочернему процессу открыть файл
+        sleep(1);
+
         while (1) {
             printf("Enter a message (exit for exit)\n");
             fgets(shared_memory, SHARED_MEMORY_SIZE, stdin);
             if (strncmp(shared_memory, "exit", 4) == 0) {
-                strcpy(shared_memory + 128, "exit");
                 break;
             }
-            usleep(10000);
+            
+            // Ждем достаточное время для обработки дочерним процессом
+            sleep(1);
             printf("Status: %s\n", shared_memory + 128);
         }
 

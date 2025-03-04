@@ -28,6 +28,7 @@ int main(int argc, char *argv[]) {
 
     char *read_msg = shared_memory;
     char *response_msg = shared_memory + 128;
+    char last_processed[128] = "";  // Буфер для хранения последнего обработанного сообщения
 
     while (strlen(read_msg) == 0) {
         sleep(1);
@@ -44,17 +45,24 @@ int main(int argc, char *argv[]) {
         if (strncmp(read_msg, "exit", 4) == 0) {
             break;
         }
-        int len = strlen(read_msg);
-        if (len > 0 && (read_msg[len - 2] == ';' || read_msg[len - 2] == '.')) {
-            fputs(read_msg, fp);
-            strcpy(response_msg, "Success");
-        } 
-        else {
-            strcpy(response_msg, "Not over in ';' or '.'");
+
+        // Проверяем, что сообщение не было обработано ранее
+        if (strcmp(read_msg, last_processed) != 0) {
+            int len = strlen(read_msg);
+            if (len > 0 && (read_msg[len - 1] == ';' || read_msg[len - 1] == '.' || 
+                          (len > 1 && (read_msg[len - 2] == ';' || read_msg[len - 2] == '.')))) {
+                fputs(read_msg, fp);
+                fflush(fp);  // Убедимся, что данные немедленно записаны в файл
+                strcpy(response_msg, "Success");
+                strcpy(last_processed, read_msg);  // Запоминаем обработанное сообщение
+            } 
+            else {
+                strcpy(response_msg, "Not over in ';' or '.'");
+                strcpy(last_processed, read_msg);  // Запоминаем обработанное сообщение
+            }
         }
     }
 
     fclose(fp);
-
     return 0;
 }
