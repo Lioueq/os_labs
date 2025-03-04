@@ -49,17 +49,15 @@ int main(int argc, char *argv[]) {
         // Проверяем, что сообщение не было обработано ранее
         if (strcmp(read_msg, last_processed) != 0) {
             int len = strlen(read_msg);
-            if (len > 0 && (read_msg[len - 1] == ';' || read_msg[len - 1] == '.' || 
-                          (len > 1 && (read_msg[len - 2] == ';' || read_msg[len - 2] == '.')))) {
+            if (len > 0 && read_msg[len - 2] == ';' || read_msg[len - 2] == '.') {
                 fputs(read_msg, fp);
-                fflush(fp);  // Убедимся, что данные немедленно записаны в файл
                 strcpy(response_msg, "Success");
-                strcpy(last_processed, read_msg);  // Запоминаем обработанное сообщение
             } 
             else {
                 strcpy(response_msg, "Not over in ';' or '.'");
-                strcpy(last_processed, read_msg);  // Запоминаем обработанное сообщение
+                
             }
+            strcpy(last_processed, read_msg);  // Запоминаем обработанное сообщение
         }
     }
 

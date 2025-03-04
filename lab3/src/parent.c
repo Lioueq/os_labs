@@ -18,9 +18,6 @@ int main() {
         perror("mmap");
         return 1;
     }
-
-    // Очищаем область разделяемой памяти
-    memset(shared_memory, 0, SHARED_MEMORY_SIZE);
     
     pid_t pid = fork();
     if (pid == -1) {
