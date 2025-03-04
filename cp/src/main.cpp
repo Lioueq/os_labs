@@ -93,7 +93,8 @@ public:
             }
             
             return true;
-        } catch (const std::exception& e) {
+        } 
+        catch (const std::exception& e) {
             std::cerr << "Ошибка при разборе JSON: " << e.what() << std::endl;
             return false;
         }

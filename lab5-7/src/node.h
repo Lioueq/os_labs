@@ -34,10 +34,12 @@ class Node {
             try {
                 msg = my_net::reseave(children[_id]);
                 if (msg == "Ok: 1") ans = msg;
-            } catch (int) {
+            } 
+            catch (int) {
             }
             return ans;
-        } else {
+        } 
+        else {
             return ans;
         }
     }
@@ -61,7 +63,8 @@ class Node {
                 children[child_id]->setsockopt(ZMQ_SNDTIMEO, 3000);
                 my_net::send_message(children[child_id], "pid");
                 child_pid = my_net::reseave(children[child_id]);
-            } catch (int) {
+            } 
+            catch (int) {
                 child_pid = "Error: can't connect to child";
             }
             return "Ok: " + child_pid;
@@ -79,7 +82,8 @@ class Node {
                 my_net::send_message(children[_id], str);
                 try {
                     return my_net::reseave(children[_id]);
-                } catch (int) {
+                } 
+                catch (int) {
                     return "Error: not find";
                 }
             }
@@ -92,7 +96,8 @@ class Node {
                 if (response != "Error: not find") {
                     return response;
                 }
-            } catch (int) {
+            } 
+            catch (int) {
             }
         }
         return "Error: not find";
@@ -107,12 +112,10 @@ class Node {
                     my_net::send_message(children[child.first], msg);
                     try {
                         msg = my_net::reseave(children[child.first]);
-                        if (ans.size() > 0)
-                            ans = ans + " " + msg;
-                        else
-                            ans = msg;
-                    } catch (int) {
-                    }
+                        if (ans.size() > 0) ans = ans + " " + msg;
+                        else ans = msg;
+                    } 
+                    catch (int) { }
                 }
                 my_net::unbind(children[child.first],
                                children_port[child.first]);
