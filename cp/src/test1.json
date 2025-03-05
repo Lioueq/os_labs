@@ -3,22 +3,22 @@
 	  {
 		"id": "job1",
 		"dependencies": [],
-		"error": false
+		"failed": false
 	  },
 	  {
 		"id": "job2",
 		"dependencies": ["job1", "job4"],
-		"error": false
+		"failed": false
 	  },
 	  {
 		"id": "job3",
 		"dependencies": ["job1"],
-		"error": false
+		"failed": true
 	  },
 	  {
 		"id": "job4",
 		"dependencies": ["job3"],
-		"error": false
+		"failed": false
 	  }
 	]
   }
