@@ -65,7 +65,6 @@ int main() {
             int id, n;
             std::cin >> id >> n;
             
-            // Формируем сообщение с количеством чисел и самими числами
             std::string msg = "exec " + std::to_string(n);
             for (int i = 0; i < n; i++) {
                 int num;

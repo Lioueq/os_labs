@@ -6,7 +6,6 @@
 #include <zmq.hpp>
 
 namespace my_net {
-
 #define MY_PORT 59000
 #define MY_IP "tcp://localhost:"
 
