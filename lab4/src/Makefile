@@ -1,9 +1,8 @@
-
 v1:
-	gcc -o prog1 prog1.c -L. -lprogv1
+	gcc -o prog1 prog1.c -L. -lprogv1 -Wl,-rpath=.
 
 v2:
-	gcc -o prog1 prog1.c -L. -lprogv2
+	gcc -o prog1 prog1.c -L. -lprogv2 -Wl,-rpath=.
 
 prog2:
 	gcc -o prog2 prog2.c -ldl
